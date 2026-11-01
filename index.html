@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة مهامي - مدير المهام الذكي</title>
+    
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>لوحة مهامي اليومية</h1>
+    </header>
+
+    <form class="task-form" id="taskForm">
+        <input type="text" id="taskInput" placeholder="أضف مهمة جديدة..." required>
+        <select id="priorityInput">
+            <option value="low">منخفضة</option>
+            <option value="medium" selected>متوسطة</option>
+            <option value="high">عالية</option>
+        </select>
+        <button type="submit">إضافة</button>
+    </form>
+
+    <div class="filters">
+        <span>تصفية حسب:</span>
+        <select id="filterSelect">
+            <option value="all">الكل</option>
+            <option value="high">عالية</option>
+            <option value="medium">متوسطة</option>
+            <option value="low">منخفضة</option>
+        </select>
+    </div>
+
+    <div id="taskList" class="task-list"></div>
+</div>
+
+<script>
+    const taskForm = document.getElementById('taskForm');
+    const taskInput = document.getElementById('taskInput');
+    const priorityInput = document.getElementById('priorityInput');
+    const taskList = document.getElementById('taskList');
+    const filterSelect = document.getElementById('filterSelect');
+
+    let tasks = JSON.parse(localStorage.getItem('tasks')) || [
+        { id: 1, text: 'مراجعة تقرير المبيعات', priority: 'high', date: '2023-10-27' },
+        { id: 2, text: 'اجتماع الفريق الدوري', priority: 'medium', date: '2023-10-27' }
+    ];
+
+    function saveTasks() {
+        localStorage.setItem('tasks', JSON.stringify(tasks));
+        renderTasks();
+    }
+
+    function renderTasks() {
+        const filter = filterSelect.value;
+        taskList.innerHTML = '';
+        
+        const filtered = filter === 'all' ? tasks : tasks.filter(t => t.priority === filter);
+        
+        filtered.forEach(task => {
+            const div = document.createElement('div');
+            div.className = `task-item ${task.priority}`;
+            div.innerHTML = `
+                <div class="task-info">
+                    <h3>${task.text}</h3>
+                    <div class="task-meta">الأولوية: ${getPriorityText(task.priority)}</div>
+                </div>
+                <button class="delete" onclick="deleteTask(${task.id})">حذف</button>
+            `;
+            taskList.appendChild(div);
+        });
+    }
+
+    function getPriorityText(p) {
+        const map = { high: 'عالية', medium: 'متوسطة', low: 'منخفضة' };
+        return map[p];
+    }
+
+    taskForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const newTask = {
+            id: Date.now(),
+            text: taskInput.value,
+            priority: priorityInput.value,
+            date: new Date().toLocaleDateString('ar-SA')
+        };
+        tasks.push(newTask);
+        taskInput.value = '';
+        saveTasks();
+    });
+
+    function deleteTask(id) {
+        tasks = tasks.filter(t => t.id !== id);
+        saveTasks();
+    }
+
+    filterSelect.addEventListener('change', renderTasks);
+
+    renderTasks();
+</script>
+
+</body>
+</html>
